@@ -1,0 +1,39 @@
+#!/bin/bash
+
+### urlLauncher 0.7 by skizzhg, a script to handle the urxvt matcher. Put this file in ~/bin/urlLauncher
+
+case "$1" in
+ -flash)
+    { mpv --no-consolecontrols --ontop --really-quiet "$2" &>/dev/null
+      if [[ "$?" != "0" ]]; then
+        case "$2" in
+          *vimeo*)
+             mpv --no-consolecontrols --title="$(youtube-dl -e $2)" --ontop --really-quiet $(youtube-dl -f h264-sd -g "$2" || youtube-dl -g "$2") &>/dev/null
+               ;;
+           *youtu*)
+                mpv --no-consolecontrols --title="$(youtube-dl --no-playlist -e $2)" --ontop --really-quiet $(youtube-dl --no-playlist -f 18 -g "$2") &>/dev/null
+               ;;
+           esac
+         fi
+       } &
+    ;;
+ -video)
+    mpv --ontop --really-quiet "$2" &>/dev/null &
+    ;;
+ -audio)
+    tmux split-window -vdp 10 "exec mpv --profile=mzk \"$2\""
+    ;;
+ -image)
+    feh -. "$2" || firefox "$2" &>/dev/null
+    ;;
+  -gif)
+    gifview -a < <(curl -s "$2")
+    ;;
+     *)
+     if [[ -z $DISPLAY ]]; then
+       tmux new-window -n w3m "exec w3m \"$1\""
+     else
+       firefox "$1" &>/dev/null
+     fi
+    ;;
+esac
