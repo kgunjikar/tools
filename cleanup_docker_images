@@ -1,0 +1,28 @@
+function cleanup_docker_images {
+        #while ()
+   echo "running cleanup_docker_images function"
+   
+   dcsi_docker_images=$(docker images | grep dcsi |  awk '{print $3}')
+   echo ${dcsi_docker_images}
+   #last_doc_image_sha=$(docker images | grep dcsi | tail -n 1 | awk '{print $3}')
+   for img in ${dcsi_docker_images}
+   do
+        #dock_rem_status=$(docker rmi -f $(docker images --filter since=${last_doc_image_sha} -q) 2>&1)
+        local count=1
+        dock_rem_status=$(docker rmi -f $(docker images --filter since=${img} -q) 2>&1)
+        echo ${dock_rem_status}
+        echo ""
+        while [ "${dock_rem_status}" == *"Deleted:"* ]
+        do
+            #last_doc_image_sha=$(docker images | grep dcsi | tail -n 1 | awk '{print $3}')
+            dock_rem_status=$(docker rmi -f $(docker images --filter since=${img} -q) 2>&1)
+            echo ${dock_rem_status}
+            echo ""
+            ((count+=1))
+        done
+        
+        docker rmi -f $img
+      echo "count of while loop is $count for img: $img"
+  done
+}
+

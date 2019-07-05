@@ -1,0 +1,420 @@
+#!/bin/bash
+function switch_branch {
+    echo $SR_CODE_BASE
+    cd $SR_CODE_BASE
+    if [[ $1 == "" ]]; then
+        echo "please specify the branch that you want to checkout"
+        return
+    fi
+    for dir in *; do
+        if [ $dir == "reltools" ]; then
+            echo $dir
+            cd $dir
+            git checkout $1
+        elif [ $dir == "snaproute" ]; then
+            cd $dir/src
+            for srcDir in */; do
+                is_asicd_dir=false
+                if [ $srcDir != "out/" ] && [ $srcDir != "vendors/" ] && [ $srcDir != "flexui/" ] && [ $srcDir != "opticd/" ]; then
+                    echo $SR_CODE_BASE/$dir/src/$srcDir
+                    cd $SR_CODE_BASE/$dir/src/$srcDir
+                    if [ $srcDir == "flexSdk/" ]; then
+                        git checkout . 
+                    elif [ $srcDir == "asicd/" ]; then
+                        #revert_lfs_files
+                        is_asicd_dir=true
+                    fi
+                    git checkout $1
+                    if $is_asicd_dir; then
+                        #git lfs fetch
+                        #git lfs checkout
+                        is_asicd_dir=false
+                    fi
+                    echo
+                fi
+            done
+        fi
+        cd $SR_CODE_BASE
+    done
+}
+
+
+function branch_name {
+    echo $SR_CODE_BASE
+    cd $SR_CODE_BASE
+    for dir in *; do
+        if [ $dir == "reltools" ]; then
+            echo $dir
+            cd $dir
+            git branch
+            #git fetch upstream
+            #git checkout -b $1 upstream/$1
+        elif [ $dir == "snaproute" ]; then
+            cd $dir/src
+            for srcDir in */; do
+                is_asicd_dir=false
+                if [ $srcDir != "out/" ] && [ $srcDir != "vendors/" ] && [ $srcDir != "flexui/" ] && [ $srcDir != "opticd/" ]; then
+                    echo $SR_CODE_BASE/$dir/src/$srcDir
+                    cd $SR_CODE_BASE/$dir/src/$srcDir
+                    if [ $srcDir == "flexSdk/" ]; then
+                        git checkout . 
+                    elif [ $srcDir == "asicd/" ]; then
+                        #revert_lfs_files
+                        is_asicd_dir=true
+                    fi
+                    #git fetch upstream
+                    #git checkout -b $1 upstream/$1
+                    git branch
+                    if $is_asicd_dir; then
+                        #git lfs fetch
+                        #git lfs checkout
+                        is_asicd_dir=false
+                    fi
+                    echo
+                fi
+            done
+        fi
+        cd $SR_CODE_BASE
+    done
+}
+function chkout {
+    echo $SR_CODE_BASE
+    cd $SR_CODE_BASE
+    if [[ $1 == "" ]]; then
+        echo "please specify the branch that you want to checkout"
+        return
+    fi
+    for dir in *; do
+        if [ $dir == "reltools" ]; then
+            echo $dir
+            cd $dir
+            git fetch upstream
+            git checkout -b $1 upstream/$1
+        elif [ $dir == "snaproute" ]; then
+            cd $dir/src
+            for srcDir in */; do
+                is_asicd_dir=false
+                if [ $srcDir != "out/" ] && [ $srcDir != "vendors/" ] && [ $srcDir != "flexui/" ] && [ $srcDir != "opticd/" ]; then
+                    echo $SR_CODE_BASE/$dir/src/$srcDir
+                    cd $SR_CODE_BASE/$dir/src/$srcDir
+                    if [ $srcDir == "flexSdk/" ]; then
+                        git checkout . 
+                    elif [ $srcDir == "asicd/" ]; then
+                        #revert_lfs_files
+                        is_asicd_dir=true
+                    fi
+                    git fetch upstream
+                    git checkout -b $1 upstream/$1
+                    if $is_asicd_dir; then
+                        #git lfs fetch
+                        #git lfs checkout
+                        is_asicd_dir=false
+                    fi
+                    echo
+                fi
+            done
+        fi
+        cd $SR_CODE_BASE
+    done
+}
+
+function repos_sync {
+    echo $SR_CODE_BASE
+    cd $SR_CODE_BASE
+    for dir in *; do
+        if [ $dir == "reltools" ]; then
+            echo $dir
+            cd $dir
+            mr_sync
+        elif [ $dir == "snaproute" ]; then
+            cd $dir/src
+            for srcDir in */; do
+                is_asicd_dir=false
+                if [ $srcDir != "out/" ]; then
+                    echo $SR_CODE_BASE/$dir/src/$srcDir
+                    cd $SR_CODE_BASE/$dir/src/$srcDir
+                    if [ $srcDir == "flexSdk/" ]; then
+                        git checkout . 
+                    elif [ $srcDir == "asicd/" ]; then
+                        #revert_lfs_files
+                        is_asicd_dir=true
+                    fi
+                    mr_sync
+                    if $is_asicd_dir; then
+                        #git lfs fetch
+                        #git lfs checkout
+                        is_asicd_dir=false
+                    fi
+                    echo
+                fi
+            done
+        fi
+        cd $SR_CODE_BASE
+    done
+}
+
+function sync_on_mino {
+    git pull origin
+}
+
+function mino_branch_status {
+    git status
+}
+
+minoOrgRepos=(
+"reltools"
+"asicd"
+"utils"
+"l2"
+"l3"
+"tools"
+"infra"
+"commondefs"
+"pi"
+)
+
+function sync_all_repos {
+    echo $SR_CODE_BASE
+    SRC=$SR_CODE_BASE/snaproute/src
+    for repo in "${minoOrgRepos[@]}"; do
+        echo "repo is:" $repo
+        if [ $repo == "reltools" ]; then
+            pushd $SR_CODE_BASE/$repo
+            echo "current directory is" $SR_CODE_BASE/$repo
+            sync_on_mino
+        elif [ $repo == "asicd" ] || [ $repo == "utils" ] || [ $repo == "commondefs" ]; then
+            pushd $SRC/$repo
+            echo "current directory is" $SRC/$repo
+            sync_on_mino
+        else
+            pushd $SRC/$repo
+            for dir in *; do
+                export retVal=0
+                #echo "dir is" $dir
+                pushd $dir; export retVal=$?
+                echo ""
+                echo "current directory is" $SRC/$repo/$dir
+                sync_on_mino
+                
+                if [ $retVal == 0 ]; then
+                    popd   
+                fi
+            done
+        fi
+        popd    
+        echo
+    done
+}
+
+function branch_status {
+    echo $SR_CODE_BASE
+    SRC=$SR_CODE_BASE/snaproute/src
+    for repo in "${minoOrgRepos[@]}"; do
+        echo "repo is:" $repo
+        if [ $repo == "reltools" ]; then
+            cd $SR_CODE_BASE/$repo
+            echo ""
+            echo "current directory is" $SR_CODE_BASE/$repo
+            mino_branch_status
+        elif [ $repo == "asicd" ] || [ $repo == "utils" ] || [ $repo == "commondefs" ]; then
+            cd $SRC/$repo
+            echo ""
+            echo "current directory is" $SRC/$repo
+            mino_branch_status
+        else
+            cd $SRC/$repo
+            for dir in *; do
+                #echo "dir is" $dir
+                cd $dir
+                echo ""
+                echo "current directory is" $SRC/$repo/$dir
+                mino_branch_status
+                cd - > /dev/null
+            done
+        fi
+        cd - > /dev/null
+        echo
+    done
+}
+
+function prepare_ws() {
+    cd $SR_CODE_BASE
+    echo "Syncing worspace to HEAD"
+    mr syncall
+    find . -name "cscope*" -exec rm -rf {} \;
+    cd $SR_CODE_BASE/snaproute/src
+    echo "Building cscope"
+    ~/scripts/cscope_build
+    echo "Building CTAGS"
+    ~/scripts/tags_build
+    echo "Doing Clean Build of WorkSpace"
+    cd $SR_CODE_BASE/snaproute/src
+    make clean_all; make
+    echo ""
+    echo "Done with setting up workspace"
+    echo ""
+}
+
+# checks if branch has something pending
+function parse_git_dirty() {
+  git diff --quiet --ignore-submodules HEAD 2>/dev/null; [ $? -eq 1 ] && echo "*"
+}
+
+# gets the current git branch
+function parse_git_branch() {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/"
+}
+# get last commit hash prepended with @ (i.e. @8a323d0)
+function parse_git_hash() {
+  git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/@\1/"
+}
+
+# DEMO
+GIT_BRANCH=$(parse_git_branch)$(parse_git_hash)
+
+function build_all {
+    cd $SR_CODE_BASE/snaproute/src
+    if [ "$1" == "" ]; then
+        make clean_all; make
+    else 
+        make clean_all; make BUILD_TARGET=$1
+    fi
+    echo "Done Clean Build of WorkSpace"
+    cd $SR_CODE_BASE
+    echo "Building cscope"
+    ~/scripts/cscope_build
+    echo "Building TAGS"
+    ftags
+}
+
+function mr_sync {
+    str="Doing MR SYNC on branch: $(parse_git_branch)"
+    echo $str
+    git pull origin $(parse_git_branch)
+    git fetch upstream
+    git merge upstream/$(parse_git_branch)
+    git push origin $(parse_git_branch)
+}
+
+function run_ovsdb_docker {
+    echo "pull socketplane ops"
+    docker pull socketplane/openvswitch
+    echo "start docker container"
+    cid=$(docker run -itd --cap-add NET_ADMIN --name "ovsdb_test" socketplane/openvswitch)
+    echo "cid: $cid"
+}
+
+function remove_ovsdb_docker {
+    echo "KILL and remove OVSDB_TEST"
+    docker kill "ovsdb_test"
+    docker rm "ovsdb_test"
+}
+
+function mrg_branch {
+    if [ "$1" == "" ]; then
+        echo "specify branch you want to sync from"
+    else
+        cd $SR_CODE_BASE
+        for dir in *; do
+            if [ $dir == "snaproute" ]; then
+                cd $dir/src
+                for srcDir in */; do
+                    if [ $srcDir != "out/" ] && [ $srcDir != "flexSdk/" ] && [ $srcDir != "vendors/" ] && [ $srcDir != "flexui/" ] && [ $srcDir != "opticd/" ]; then
+                        cd $SR_CODE_BASE/$dir/src/$srcDir
+                        repo=${srcDir///}
+                        echo "Syncing $(parse_git_branch) to $1 for $repo"
+                        git fetch upstream
+                        git merge upstream/$1
+                        git push origin $(parse_git_branch)
+          #              merge_branch
+       #                 git merge --no-ff upstream/$1
+       #                 git commit -s --amend
+       #                 git push origin $(parse_git_branch)
+                    fi
+                done
+            fi
+            cd $SR_CODE_BASE
+        done
+    fi
+}
+
+function copy_fs() {
+    #scp $1 root@10.1.10.$2:$1
+    scp $1 admin@192.168.100.$2:$1
+}
+
+function fs() {
+    #ssh root@10.1.10.$1
+    ssh root@192.168.100.$1
+}
+
+function switch() {
+    ssh admin@192.168.100.$1
+    #ssh admin@10.1.10.$1
+}
+
+function daemon_cp() {
+    scp $SR_CODE_BASE/snaproute/src/out/bin/$1 admin@192.168.100.$2:
+    #scp $SR_CODE_BASE/snaproute/src/out/bin/$1 root@192.168.100.$2:/opt/flexswitch/bin
+}
+
+function svr() {
+    ssh jgheewala@10.1.10.$1
+}
+
+function botsvr() {
+    ssh builduser@10.1.10.203
+}
+
+function build_tags() {
+    cd $SR_CODE_BASE
+    ~/scripts/tags_build
+    cd -
+}
+
+function bcm_shell() {
+    #rlwrap nc 10.1.10.$1 40000
+    rlwrap nc 192.168.100.$1 40000
+}
+
+function fs_cli() {
+    #cd $SR_CODE_BASE/snaproute/src/apps/cli2
+    #source env.sh
+    #./snap_cli.py -s 10.1.10.$1
+    #./snap_cli.py -s 192.168.100.$1
+    ssh cli@192.168.100.$1 -p2022
+}
+
+function gen_pkg_build() {
+    cd $SR_CODE_BASE/reltools
+    python makePkg.py
+    build_all $1
+}
+
+function merge_branch() {
+    if [ "$1" == "" ]; then
+        echo "specify branch you want to sync from"
+    else
+       git fetch upstream
+       git merge upstream/$1
+       git push origin $(parse_git_branch)
+    fi
+}
+
+alias rt='cd $SR_CODE_BASE/reltools'
+alias sr='cd $SR_CODE_BASE/snaproute/src'
+alias asicd='cd $SR_CODE_BASE/snaproute/src/asicd'
+alias models='cd $SR_CODE_BASE/snaproute/src/models'
+alias vendors='cd $SR_CODE_BASE/snaproute/src/vendors'
+alias l3='cd $SR_CODE_BASE/snaproute/src/l3'
+alias l2='cd $SR_CODE_BASE/snaproute/src/l2'
+alias sr_test='cd $SR_CODE_BASE/snaproute/src/test'
+alias set_git_env='source ~/scripts/env_setup'
+alias cli_dir='cd $SR_CODE_BASE/snaproute/src/apps/cli2'
+alias sr_utils='cd $SR_CODE_BASE/snaproute/src/utils'
+alias sr_fp='cd $SR_CODE_BASE/snaproute/src/flexpath'
+alias sr_pi='cd $SR_CODE_BASE/snaproute/src/pi/'
+alias intfd='cd $SR_CODE_BASE/snaproute/src/pi/intf'
+alias ufibd='cd $SR_CODE_BASE/snaproute/src/pi/ufib'
+alias adjd='cd $SR_CODE_BASE/snaproute/src/pi/adj'
+alias build_gotags='source ~/scripts/gotags_build'
