@@ -58,3 +58,4 @@ augroup ProjectDrawer
   autocmd VimEnter * :Vexplore
 augroup END
 map <F9> :make
+au VimEnter * wincmd l
