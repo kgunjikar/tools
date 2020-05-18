@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	filecontent, err := ioutil.ReadFile("/Users/kshitijgunjikar/Downloads/cert-manager.yaml")
+	filecontent, err := ioutil.ReadFile("/home/kshitij/code/src/gitlab.eng.diamanti.com/software/mcm.git/tenant/tools/cert_02.yaml")
 	if err != nil {
 		fmt.Printf("%s", err.Error())
 		return
