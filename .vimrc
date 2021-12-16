@@ -46,7 +46,7 @@ nmap <F8> :TagbarToggle<CR>
 color torte
 set csre
 
-source ~/.vim/bundle/cscope_macros.vim
+"source ~/.vim/bundle/cscope_macros.vim
 map <F2> :!ls<CR>
 let g:netrw_banner = 0
 let g:netrw_liststyle = 3
