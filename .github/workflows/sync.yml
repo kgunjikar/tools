@@ -1,0 +1,20 @@
+name: Sync with Original Repo
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # This runs every hour
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Push to Original Repo
+        run: |
+          git remote add upstream https://github.com/kgunjikar/tools.git
+          git push upstream --all
+          git push upstream --tags
+
